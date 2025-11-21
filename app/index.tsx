@@ -25,7 +25,7 @@ export default function IndexScreen() {
       const usuario = await autenticar(data.email, data.senha);
 
       if (usuario) {
-        router.push({ pathname: "/home", params: { id: usuario.IDUSUARIO } });
+        router.push({ pathname: "/home", params: { id: usuario.idusuario } });
       } else {
         Alert.alert("Erro", "Email ou senha inválidos");
       }
