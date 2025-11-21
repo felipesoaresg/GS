@@ -82,9 +82,8 @@ export default function IndexScreen() {
       </TouchableOpacity>
 
       <Text style={styles.testInfo}>
-        Para fins de teste, entre com as seguintes credenciais:{"\n"}
-        E-mail: felipe@empresa.com{"\n"}
-        Senha: Teste123
+        Entre com as seguintes credenciais:{"\n"}
+        E-mail: felipe@empresa.com; Senha: Teste123
       </Text>
     </View>
   );
