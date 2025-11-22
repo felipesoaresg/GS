@@ -4,13 +4,15 @@ import { Usuario } from "@/types/usuario";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import api from "../../api/api";
 
 export default function HomeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [lembrete, setLembrete] = useState<Lembrete | null>(null);
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [gestor, setGestor] = useState<Usuario | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -36,9 +38,21 @@ export default function HomeScreen() {
       }
     };
 
+    const fetchGestor = async () => {
+      try {
+        const response = await api.get<Usuario[]>("/usuarios");
+        const usuarios = response.data;
+        const gestorEncontrado = usuarios.find((u) => u.idusuario === 3);
+        setGestor(gestorEncontrado || null);
+      } catch (error) {
+        console.error("Erro ao buscar gestor:", error);
+      }
+    };
+
     if (id) {
       fetchUsuario();
       fetchLembrete();
+      fetchGestor();
     }
   }, [id]);
 
@@ -53,13 +67,14 @@ export default function HomeScreen() {
   return (
     <>
       <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.push({ pathname: "/user", params: { id: usuario.idusuario } })}>
-          <Ionicons name="person-circle-outline" size={40} color="#A7C7E7" />
-        </TouchableOpacity>
-        <Text style={styles.welcome}>Olá, {usuario.nome_usuario}</Text>
-      </View>
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => router.push({ pathname: "/user", params: { id: usuario.idusuario } })}
+          >
+            <Ionicons name="person-circle-outline" size={40} color="#A7C7E7" />
+          </TouchableOpacity>
+          <Text style={styles.welcome}>Olá, {usuario.nome_usuario}</Text>
+        </View>
 
         <View style={styles.mainContent}>
           {lembrete ? (
@@ -90,13 +105,38 @@ export default function HomeScreen() {
 
           <TouchableOpacity
             style={styles.alertButton}
-            onPress={() => router.push({ pathname: "/", params: { id } })}
+            onPress={() => setShowOverlay(true)}
           >
-            <Ionicons name="alert-circle-outline" size={24} color="#111827" />
+            <Ionicons name="alert-circle-outline" size={40} color="#111827" />
             <Text style={styles.alertText}>Alerta de Crise</Text>
           </TouchableOpacity>
         </View>
       </View>
+
+      <Modal
+        visible={showOverlay}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowOverlay(false)}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.overlayBox}>
+            <Ionicons name="alert-circle-outline" size={50} color="#FF4C4C" />
+            <Text style={styles.overlayTitle}>Aviso Gestor</Text>
+            <Text style={styles.overlayText}>
+              O gestor {gestor?.nome_usuario ?? "não encontrado"} vai ajudá-lo
+            </Text>
+
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowOverlay(false)}
+            >
+              <Text style={styles.closeText}>Fechar</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <Category />
     </>
   );
@@ -193,27 +233,68 @@ const styles = StyleSheet.create({
   },
 
   alertButton: {
-    flexDirection: "row",
+    flexDirection: "column",
     alignItems: "center",
     backgroundColor: "#FFB7B2",
     paddingVertical: 14,
-    paddingHorizontal: 15,
+    paddingHorizontal: 20,
     borderRadius: 8,
     marginTop: 40,
-    justifyContent: "center",
-    width: "100%",
   },
 
   alertText: {
     color: "#111827",
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "bold",
-    marginLeft: 8,
+    marginTop: 6,
+    textAlign: "center",
   },
 
   error: {
     color: "red",
     fontSize: 16,
     textAlign: "center",
+  },
+
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  overlayBox: {
+    backgroundColor: "#FFF",
+    padding: 20,
+    borderRadius: 10,
+    width: "80%",
+    alignItems: "center",
+  },
+
+  overlayTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#111827",
+  },
+
+  overlayText: {
+    fontSize: 16,
+    color: "#333",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+
+  closeButton: {
+    backgroundColor: "#FFB7B2",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+
+  closeText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#111827",
   },
 });
