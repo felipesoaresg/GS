@@ -1,14 +1,19 @@
 import { Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 const BackButton = () => {
   const router = useRouter();
+  const { id } = useLocalSearchParams<{ id?: string }>();
+
+  const handleBack = () => {
+    router.push({ pathname: "/home", params: id ? { id } : {} });
+  };
 
   return (
     <View style={styles.header}>
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
         <View style={styles.backCircle}>
           <Feather name="arrow-left" size={20} color="#111827" />
         </View>
@@ -21,12 +26,12 @@ export default BackButton;
 
 const styles = StyleSheet.create({
   header: {
+    backgroundColor: '#A7C7E7',
+    padding: 5,
     flexDirection: 'row',
     alignItems: 'center',
     paddingBottom: 12,
-    borderBottomWidth: 1,
     borderBottomColor: '#A7C7E7',
-    marginBottom: 1,
   },
   backButton: {
     marginLeft: 4,
