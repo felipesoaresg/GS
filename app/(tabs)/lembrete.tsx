@@ -1,4 +1,4 @@
-import { criarLembrete, excluirLembrete, listarLembretesPorUsuario } from "@/api/lembrete";
+import { atualizarLembrete, criarLembrete, excluirLembrete, listarLembretesPorUsuario } from "@/api/lembrete";
 import BackButton from "@/components/backButton";
 import Category from "@/components/Category";
 import { Lembrete } from "@/types/lembrete";
@@ -12,6 +12,7 @@ export default function LembretesScreen() {
   const [lembretes, setLembretes] = useState<Lembrete[]>([]);
   const [tipo, setTipo] = useState("");
   const [frequencia, setFrequencia] = useState("");
+  const [idlembreteEditando, setIdlembreteEditando] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchLembretes = async () => {
@@ -43,6 +44,25 @@ export default function LembretesScreen() {
     }
   };
 
+  const handleAtualizarLembrete = async () => {
+    if (!tipo.trim() || !frequencia.trim() || idlembreteEditando === null) return;
+    try {
+      await atualizarLembrete(idlembreteEditando, {
+        idusuario: Number(id),
+        tipo_lembrete: tipo,
+        frequencia: Number(frequencia),
+        ativo: "S",
+      });
+      const data = await listarLembretesPorUsuario(Number(id));
+      setLembretes(data);
+      setTipo("");
+      setFrequencia("");
+      setIdlembreteEditando(null);
+    } catch (error) {
+      console.error("Erro ao atualizar lembrete:", error);
+    }
+  };
+
   const handleExcluirLembrete = async (idlembrete: number) => {
     try {
       await excluirLembrete(idlembrete);
@@ -50,6 +70,12 @@ export default function LembretesScreen() {
     } catch (error) {
       console.error("Erro ao excluir lembrete:", error);
     }
+  };
+
+  const iniciarEdicao = (lembrete: Lembrete) => {
+    setTipo(lembrete.tipo_lembrete);
+    setFrequencia(lembrete.frequencia.toString());
+    setIdlembreteEditando(lembrete.idlembrete);
   };
 
   return (
@@ -71,8 +97,13 @@ export default function LembretesScreen() {
             value={frequencia}
             onChangeText={setFrequencia}
           />
-          <TouchableOpacity style={styles.button} onPress={handleCriarLembrete}>
-            <Text style={styles.buttonText}>Criar Lembrete</Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={idlembreteEditando === null ? handleCriarLembrete : handleAtualizarLembrete}
+          >
+            <Text style={styles.buttonText}>
+              {idlembreteEditando === null ? "Criar Lembrete" : "Atualizar Lembrete"}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -90,14 +121,19 @@ export default function LembretesScreen() {
                     Frequência: {item.frequencia} dias
                   </Text>
                 </View>
-                <TouchableOpacity onPress={() => handleExcluirLembrete(item.idlembrete)}>
-                  <Ionicons name="trash-outline" size={24} color="#E74C3C" />
-                </TouchableOpacity>
+                <View style={{ flexDirection: "row", alignItems: "center" }}>
+                  <TouchableOpacity onPress={() => iniciarEdicao(item)} style={{ marginRight: 10 }}>
+                    <Ionicons name="create-outline" size={24} color="#2980B9" />
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => handleExcluirLembrete(item.idlembrete)}>
+                    <Ionicons name="trash-outline" size={24} color="#E74C3C" />
+                  </TouchableOpacity>
+                </View>
               </View>
             )}
           />
         )}
-        <Category/>
+        <Category />
       </View>
     </>
   );
