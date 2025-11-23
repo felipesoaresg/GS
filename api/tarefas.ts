@@ -18,3 +18,12 @@ export async function criarTarefa(tarefa: {
 export async function excluirTarefa(idtarefa: number): Promise<void> {
   await api.delete(`/tarefas/${idtarefa}`);
 }
+
+export async function atualizarTarefa(idtarefa: number, tarefa: {
+  idusuario: number;
+  titulo_tarefa: string;
+  descricao_tarefa: string;
+  status_tarefa: string;
+}): Promise<void> {
+  await api.put(`/tarefas/${idtarefa}`, tarefa);
+}
